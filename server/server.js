@@ -10,7 +10,7 @@ const port = 9000;
 server.use(express.json());
 server.use(
   cors({
-    origin: "https://next-step-backend-bqug.onrender.com",
+    origin: "https://next-step-mu-five.vercel.app",
     methods: "POST , GET",
     allowedHeaders: "Content-Type,Authorization", // Allow specific headers
   })
