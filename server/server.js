@@ -8,7 +8,13 @@ const port = 9000;
 
 
 server.use(express.json());
-server.use(cors());
+server.use(
+  cors({
+    origin: "https://next-step-backend-bqug.onrender.com",
+    methods: "POST , GET",
+    allowedHeaders: "Content-Type,Authorization", // Allow specific headers
+  })
+);
 server.use(router);
 
 server.listen(port,()=>{
