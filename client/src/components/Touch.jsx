@@ -1,42 +1,29 @@
-import React, { useState } from "react";
+import React from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+
+const schema = z.object({
+  first: z.string().min(1, "First name is required"),
+  last: z.string().min(1, "Last name is required"),
+  email: z.string().email("Invalid email address"),
+  phone: z.string().min(10, "Phone number is required"),
+  organisation: z.string().min(1, "Organisation is required"),
+  message: z.string().optional(),
+});
 
 function Touch() {
-  const [formData, setFormData] = useState({
-    first: "",
-    last: "",
-    email: "",
-    phone: "",
-    organisation: "",
-    message: "",
-  });
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+    reset,
+  } = useForm({ resolver: zodResolver(schema) });
 
-  const [message, setMessage] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = React.useState("");
 
-
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
-
- 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setMessage(""); 
-    setLoading(true);
-
-    
-    if (
-      !formData.first ||
-      !formData.last ||
-      !formData.email ||
-      !formData.phone ||
-      !formData.organisation
-    ) {
-      setMessage("❌ Please fill in all required fields.");
-      setLoading(false);
-      return;
-    }
-
+  const onSubmit = async (formData) => {
+    setMessage("");
     try {
       const res = await fetch(
         "https://next-step-backend-bqug.onrender.com/register",
@@ -48,26 +35,15 @@ function Touch() {
           body: JSON.stringify(formData),
         }
       );
-
       const data = await res.json();
-
       if (res.ok) {
         setMessage("✅ Email sent successfully!");
-        setFormData({
-          first: "",
-          last: "",
-          email: "",
-          phone: "",
-          organisation: "",
-          message: "",
-        });
+        reset();
       } else {
         setMessage(`❌ Error: ${data.message || "Something went wrong"}`);
       }
     } catch (error) {
       setMessage("❌ Failed to send email. Please try again.");
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -78,18 +54,17 @@ function Touch() {
           <div className="row justify-content-between">
             <div className="col-md-6 col-lg-6">
               <h3 className="fw-bold fs-2 mb-4">Get in touch</h3>
-              <form onSubmit={handleSubmit} className="row g-4">
+              <form onSubmit={handleSubmit(onSubmit)} className="row g-4">
                 <div className="col-md-6">
                   <label>
                     First Name <span className="text-danger">*</span>
                   </label>
                   <input
                     type="text"
-                    name="first"
-                    value={formData.first}
-                    onChange={handleChange}
+                    {...register("first")}
                     className="form-control"
                   />
+                  <p className="text-danger">{errors.first?.message}</p>
                 </div>
                 <div className="col-md-6">
                   <label>
@@ -97,11 +72,10 @@ function Touch() {
                   </label>
                   <input
                     type="text"
-                    name="last"
-                    value={formData.last}
-                    onChange={handleChange}
+                    {...register("last")}
                     className="form-control"
                   />
+                  <p className="text-danger">{errors.last?.message}</p>
                 </div>
                 <div className="col-md-6">
                   <label>
@@ -109,11 +83,10 @@ function Touch() {
                   </label>
                   <input
                     type="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleChange}
+                    {...register("email")}
                     className="form-control"
                   />
+                  <p className="text-danger">{errors.email?.message}</p>
                 </div>
                 <div className="col-md-6">
                   <label>
@@ -121,11 +94,10 @@ function Touch() {
                   </label>
                   <input
                     type="text"
-                    name="phone"
-                    value={formData.phone}
-                    onChange={handleChange}
+                    {...register("phone")}
                     className="form-control"
                   />
+                  <p className="text-danger">{errors.phone?.message}</p>
                 </div>
                 <div className="col-md-12">
                   <label>
@@ -133,29 +105,24 @@ function Touch() {
                   </label>
                   <input
                     type="text"
-                    name="organisation"
-                    value={formData.organisation}
-                    onChange={handleChange}
+                    {...register("organisation")}
                     className="form-control"
                   />
+                  <p className="text-danger">{errors.organisation?.message}</p>
                 </div>
                 <div className="col-md-12">
                   <label>Message</label>
                   <textarea
-                    name="message"
-                    value={formData.message}
-                    onChange={handleChange}
+                    {...register("message")}
                     className="form-control"
                   ></textarea>
                 </div>
                 <div className="col-md-12">
                   <button type="submit" className="btnPrimary">
-                    {loading ? "Submitting..." : "Submit"}
+                    {isSubmitting ? "Submitting..." : "Submit"}
                   </button>
                 </div>
               </form>
-
-              {/* Success/Error Message */}
               {message && (
                 <p
                   className="mt-3"
@@ -164,40 +131,6 @@ function Touch() {
                   {message}
                 </p>
               )}
-            </div>
-
-            {/* Contact Info Section */}
-            <div className="col-md-6 col-lg-5">
-              <p>6A, Kiran Sankar Roy Road, Kolkata-700001, India</p>
-              <p>engage@nextsteps.net.in</p>
-              <p>+91 9830320209 / 9836285620</p>
-              <p>
-                Follow us:
-                <a
-                  href="https://www.linkedin.com/company/next-steps-communications/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{
-                    textDecoration: "none",
-                    color: "inherit",
-                    marginLeft: "1px",
-                  }}
-                >
-                  <i className="ri-linkedin-box-fill fs-4"></i>
-                </a>
-                <a
-                  href="https://wa.me/919836285620"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{
-                    textDecoration: "none",
-                    color: "inherit",
-                    marginLeft: "1px",
-                  }}
-                >
-                  <i className="ri-whatsapp-fill fs-4"></i>
-                </a>
-              </p>
             </div>
           </div>
         </div>
