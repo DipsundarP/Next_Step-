@@ -1,50 +1,46 @@
 import React, { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+
+// Validation schema using Zod
+const schema = z.object({
+  first: z
+    .string()
+    .min(1, "First name is required")
+    .regex(/^[A-Za-z]+$/, "First name must contain only letters"),
+  last: z
+    .string()
+    .min(1, "Last name is required")
+    .regex(/^[A-Za-z]+$/, "Last name must contain only letters"),
+  email: z.string().email("Invalid email format"),
+  phone: z.string().regex(/^\d{10}$/, "Phone number must be exactly 10 digits"),
+  organisation: z.string().min(1, "Organisation is required"),
+  message: z.string().optional(),
+});
 
 function Touch() {
-  const [formData, setFormData] = useState({
-    first: "",
-    last: "",
-    email: "",
-    phone: "",
-    organisation: "",
-    message: "",
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+    reset,
+  } = useForm({
+    resolver: zodResolver(schema),
   });
 
   const [message, setMessage] = useState("");
-  const [loading, setLoading] = useState(false);
 
-
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
-
- 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setMessage(""); 
-    setLoading(true);
-
-    
-    if (
-      !formData.first ||
-      !formData.last ||
-      !formData.email ||
-      !formData.phone ||
-      !formData.organisation
-    ) {
-      setMessage("❌ Please fill in all required fields.");
-      setLoading(false);
-      return;
-    }
+  // Submit handler
+  const onSubmit = async (formData) => {
+    setMessage(""); // Reset message before submitting
 
     try {
       const res = await fetch(
         "https://next-step-backend-bqug.onrender.com/register",
         {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify(formData),
         }
       );
@@ -53,21 +49,12 @@ function Touch() {
 
       if (res.ok) {
         setMessage("✅ Email sent successfully!");
-        setFormData({
-          first: "",
-          last: "",
-          email: "",
-          phone: "",
-          organisation: "",
-          message: "",
-        });
+        reset(); // Clear form after successful submission
       } else {
         setMessage(`❌ Error: ${data.message || "Something went wrong"}`);
       }
     } catch (error) {
       setMessage("❌ Failed to send email. Please try again.");
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -78,79 +65,79 @@ function Touch() {
           <div className="row justify-content-between">
             <div className="col-md-6 col-lg-6">
               <h3 className="fw-bold fs-2 mb-4">Get in touch</h3>
-              <form onSubmit={handleSubmit} className="row g-4">
+
+              <form onSubmit={handleSubmit(onSubmit)} className="row g-4">
                 <div className="col-md-6">
                   <label>
                     First Name <span className="text-danger">*</span>
                   </label>
                   <input
+                    {...register("first")}
                     type="text"
-                    name="first"
-                    value={formData.first}
-                    onChange={handleChange}
                     className="form-control"
                   />
+                  <p className="text-danger">{errors.first?.message}</p>
                 </div>
+
                 <div className="col-md-6">
                   <label>
                     Last Name <span className="text-danger">*</span>
                   </label>
                   <input
+                    {...register("last")}
                     type="text"
-                    name="last"
-                    value={formData.last}
-                    onChange={handleChange}
                     className="form-control"
                   />
+                  <p className="text-danger">{errors.last?.message}</p>
                 </div>
+
                 <div className="col-md-6">
                   <label>
                     Email <span className="text-danger">*</span>
                   </label>
                   <input
+                    {...register("email")}
                     type="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleChange}
                     className="form-control"
                   />
+                  <p className="text-danger">{errors.email?.message}</p>
                 </div>
+
                 <div className="col-md-6">
                   <label>
                     Phone <span className="text-danger">*</span>
                   </label>
                   <input
+                    {...register("phone")}
                     type="text"
-                    name="phone"
-                    value={formData.phone}
-                    onChange={handleChange}
                     className="form-control"
                   />
+                  <p className="text-danger">{errors.phone?.message}</p>
                 </div>
+
                 <div className="col-md-12">
                   <label>
                     Organisation <span className="text-danger">*</span>
                   </label>
                   <input
+                    {...register("organisation")}
                     type="text"
-                    name="organisation"
-                    value={formData.organisation}
-                    onChange={handleChange}
                     className="form-control"
                   />
+                  <p className="text-danger">{errors.organisation?.message}</p>
                 </div>
+
                 <div className="col-md-12">
                   <label>Message</label>
                   <textarea
-                    name="message"
-                    value={formData.message}
-                    onChange={handleChange}
+                    {...register("message")}
                     className="form-control"
                   ></textarea>
                 </div>
+
                 <div className="col-md-12">
                   <button type="submit" className="btnPrimary">
-                    {loading ? "Submitting..." : "Submit"}
+                    {isSubmitting ? "Submitting..." : "Submit"}
                   </button>
                 </div>
               </form>
